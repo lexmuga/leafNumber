@@ -11,9 +11,9 @@ ui <- shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
       numericInput("N",  "Input the number of nodes: ",
-                   min = 5, max = 1000, value = 10, step = 1),
+                   min = 5, max = 1000, value = 91, step = 1),
       numericInput("K", "Input an even number of links per node: ",
-                   min = 2, max = 500, value = 4, step = 2),
+                   min = 2, max = 500, value = 14, step = 2),
       
       helpText("Note: Two types of maximum leaf spanning tree (MLST)", 
                "of all undirected circulant networks: ",
@@ -28,11 +28,12 @@ ui <- shinyUI(fluidPage(
     mainPanel(
       tabsetPanel(
         tabPanel("Circulant Network", simpleNetworkOutput("simple")),
-        tabPanel("Max. Spanning Tree I", treeNetworkOutput("onebranchtree")),
-        tabPanel("Max. Spanning Tree II", treeNetworkOutput("twobranchtree")),
-        tabPanel("Table", tableOutput("table"))
+        tabPanel("MLST I", treeNetworkOutput("oneBranchTree")),
+        tabPanel("MLST II", treeNetworkOutput("twoBranchTree")),
+        tabPanel("Node Types", tableOutput("nodeTypes")),
+        tabPanel("Jump Sizes", tableOutput("jumpSizes")),
+        tabPanel("Internal Nodes", tableOutput("intNodes"))
       )
     )
   )
-  
 ))

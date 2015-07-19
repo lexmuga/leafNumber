@@ -7,46 +7,69 @@ server <- function(input, output) {
   
   output$simple <- renderSimpleNetwork({
     N <- input$N
-    k <- round(input$K/2,0)
+    k <- input$K/2
     S <- findJumpSizes(N,k)
     circulantData <- sourceTargetTable(N,S)
     simpleNetwork(circulantData, opacity = 0.9)
   })
   
-  output$onebranchtree <- renderTreeNetwork({
+  output$oneBranchTree <- renderTreeNetwork({
     N <- input$N
-    k <- round(input$K/2,0)
-    S <- findJumpSizes(N,k)
-    treeData <- findPC1B(N, k)
-    rsTreeData <- rsplit(recursiveStructure(treeData$p, treeData$L))[[1]]
-    treeNetwork(rsTreeData, height = NULL, width = NULL, fontSize = 10,
-                fontFamily = "serif", linkColour = "#ccc", nodeColour = "#fff",
-                nodeStroke = "steelblue", textColour = "#111", opacity = 0.9,
-                margin = 0)
+    k <- input$K/2
+    drawMLST(N,k)
   })
   
-  output$twobranchtree <- renderTreeNetwork({
+  output$twoBranchTree <- renderTreeNetwork({
     N <- input$N
-    k <- round(input$K/2,0)
+    k <- input$K/2
+    drawMLST(N,k,2)
+  })
+  
+  output$nodeTypes <- renderTable({
+    N <- input$N
+    k <- input$K/2
+    L <- leafNumber(N,k)
+    M <- connectedDominationNumber(N,k)
     S <- findJumpSizes(N,k)
-    ifelse(N <= 4 * k,
-           treeData <- findPC1B(N, k),
-           treeData <- findPC2B(N, k)
+    legend <- c("Leaf", 
+                "Internal",
+                " ")
+    value <- c(L, M, N) 
+   nodeTable <- data.frame(NodeType = legend, 
+                       Number_of_Nodes = format(value, digits = 0))
+   nodeTable
+  })
+  
+  output$jumpSizes <- renderTable({
+    N <- input$N
+    k <- input$K/2
+    S <- findJumpSizes(N,k)
+    s <- S[1:k]
+    t <- N-s
+    jumpTable <- format(data.frame(s = s, t=t),
+                    digits = 0)
+    names(jumpTable) <- c("s", "N-s")
+    jumpTable
+  })
+  
+  output$intNodes <- renderTable({
+    N <- input$N
+    k <- input$K/2
+    S <- findJumpSizes(N,k)
+    M <- connectedDominationNumber(N,k)
+    M1 <- ceiling(M/2)
+    M2 <- floor(M/2)
+    TypeI <- c(0:(M-1))
+    ifelse(N <= 4*k,
+       TypeII <- c(0:(M-1)),
+       TypeII <- c(0:(M1-1),N-1:M2)
     )
-    rsTreeData <- rsplit(recursiveStructure(treeData$p, treeData$L))[[1]]
-    treeNetwork(rsTreeData, height = NULL, width = NULL, fontSize = 10,
-                fontFamily = "serif", linkColour = "#ccc", nodeColour = "#fff",
-                nodeStroke = "steelblue", textColour = "#111", opacity = 0.9,
-                margin = 0)
+    tableType <- data.frame(A = TypeI, B = TypeII)
+    names(tableType) <- c("For MLST I",
+                          "For MLST II")
+    tableType
   })
   
-  output$table <- renderTable({
-    N <- input$N
-    k <- round(input$K/2,0)
-    L <- round(leafNumber(N,k),0)
-    M <- round(connectedDominationNumber(N,k),0)
-    data.frame(Leaf_Number = L, Internal_Nodes=M, Total_Nodes=N)
-  })
 
 ## createCirculant
 sourceTargetTable <- function(N,S) {
@@ -150,11 +173,10 @@ findPC1B <- function(N,k){
 }
 
 findPC2B <- function(N,k){
-  if(N - 2*k - 1 < 0){L <- NA}
+  if(N - 2*k - 1 < 0){pL <- list(p=NA, L=NA)}
   if(N - 2*k - 1 >= 0){
     if(N <= 4*k){
       pL <- findPC1B(N,k)
-      pL
     }
     if(N > 4*k){
       S <- findJumpSizes(N,k)
@@ -193,8 +215,9 @@ findPC2B <- function(N,k){
         }
         L[as.character(N-i2)] <- list((T2-i2) %% N)
       }
-      list(p=p, L=L)
+      pL <- list(p=p, L=L)
     }
+    pL
   }
 }
 

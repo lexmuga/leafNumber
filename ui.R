@@ -19,20 +19,23 @@ ui <- shinyUI(fluidPage(
                "of all undirected circulant networks: ",
                "Spanning Tree I: One branch from root 0, and",
                "Spanning Tree II: Two branches from root 0.",
+               "They are the same if the number of internal nodes",
+               "is at most 2.",
                "Nodes are labelled from 0, 1, up to N-1.",
                "*****************************************",
                "Please scroll down to see the ui.R and server.R scripts below."),
         
-      submitButton("Update View")
+      submitButton("Update Network")
     ),
     mainPanel(
       tabsetPanel(
         tabPanel("Circulant Network", simpleNetworkOutput("simple")),
-        tabPanel("MLST I", treeNetworkOutput("oneBranchTree")),
-        tabPanel("MLST II", treeNetworkOutput("twoBranchTree")),
-        tabPanel("Node Types", tableOutput("nodeTypes")),
         tabPanel("Jump Sizes", tableOutput("jumpSizes")),
-        tabPanel("Internal Nodes", tableOutput("intNodes"))
+        tabPanel("Node Types", tableOutput("nodeTypes")),
+        tabPanel("MLST I", treeNetworkOutput("oneBranchTree")),
+        tabPanel("Branch: MLST I", tableOutput("intNodes1")),
+        tabPanel("MLST II", treeNetworkOutput("twoBranchTree")),
+        tabPanel("Branches: MLST II", tableOutput("intNodes2"))
       )
     )
   )

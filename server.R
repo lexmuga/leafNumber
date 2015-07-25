@@ -37,6 +37,7 @@ server <- function(input, output) {
     value <- c(L, M, N) 
    nodeTable <- data.frame(NodeType = legend, 
                        Number_of_Nodes = format(value, digits = 0))
+   names(nodeTable) <- c("Node Type", "Number of Nodes")
    nodeTable
   })
   
@@ -52,24 +53,43 @@ server <- function(input, output) {
     jumpTable
   })
   
-  output$intNodes <- renderTable({
+  output$intNodes1 <- renderTable({
     N <- input$N
     k <- input$K/2
     S <- findJumpSizes(N,k)
     M <- connectedDominationNumber(N,k)
     M1 <- ceiling(M/2)
     M2 <- floor(M/2)
-    TypeI <- c(0:(M-1))
+    Internal <- c(0:(M-1))
+    Parent <- c("NONE",0:(M-2))
     ifelse(N <= 4*k,
-       TypeII <- c(0:(M-1)),
+       TypeI <- c(0:(M-1)),
        TypeII <- c(0:(M1-1),N-1:M2)
     )
-    tableType <- data.frame(A = TypeI, B = TypeII)
-    names(tableType) <- c("For MLST I",
-                          "For MLST II")
-    tableType
+   TypeI<- data.frame(A = Internal, B = Parent)
+   names(TypeI) <- c("Internal Node", "Parent Node")
+   TypeI
   })
   
+  output$intNodes2 <- renderTable({
+    N <- input$N
+    k <- input$K/2
+    S <- findJumpSizes(N,k)
+    M <- connectedDominationNumber(N,k)
+    M1 <- ceiling(M/2)
+    M2 <- floor(M/2)
+    if(N <= 4*k){
+      Internal <- c(0:(M-1))
+      Parent <- c("NONE",0:(M-2))
+    }
+    if(N > 4*k){
+    Internal <- c(0:(M1-1), N-1:M2)
+    Parent <- c("NONE",0:(M1-2),0,N-1:(M2-1))
+    }
+    TypeII <- data.frame(A = Internal, B = Parent)
+    names(TypeII) <- c("Internal Node", "Parent Node")
+    TypeII
+  })
 
 ## createCirculant
 sourceTargetTable <- function(N,S) {
@@ -173,7 +193,7 @@ findPC1B <- function(N,k){
 }
 
 findPC2B <- function(N,k){
-  if(N - 2*k - 1 < 0){pL <- list(p=NA, L=NA)}
+  if(N - 2*k - 1 < 0){pL <- list(p=NA,L=NA)}
   if(N - 2*k - 1 >= 0){
     if(N <= 4*k){
       pL <- findPC1B(N,k)
@@ -189,37 +209,35 @@ findPC2B <- function(N,k){
       r <- (N - 2) %% (2*k - 1)
       
       L['0'] <- list(S)
-      S2 <-S[-(2*k)]
-      T2 <- S[-1]
-      d <- numeric()
-      for(i in 1:(2*k-1)){
-        d[i] <- S[i+1] - S[i] - 1
-      }
-      delta <- max(d)
-      c1 <- ceiling(delta/2)
-      c2 <- floor(delta/2)
-      
       for(v in S){
         p[as.character(v)] <- 0
       }
       
-      for(i1 in 1:c1){
-        for(s in S2){
-          p[as.character(s+i1)] <- i1
+      for(j in 0:(2*k-2)){
+        sj <- S[j+1]
+        tj <- S[j+2]
+        dj <- tj - sj - 1
+        cj1 <- ceiling(dj/2)
+        cj2 <- floor(dj/2)
+        
+        for(i1 in 1:cj1){
+          p[as.character(sj+i1)] <- i1
+          L[as.character(i1)][[1]] <- append(L[as.character(i1)][[1]],(sj+i1) %% N)
         }
-        L[as.character(i1)] <- list((S2+i1) %% N)
-      }
-      for(i2 in 1:c2){
-        for(t in T2){
-          p[as.character(t-i2)] <- N-i2
+        
+        if(cj2 > 0){
+          for(i2 in 1:cj2){
+            p[as.character(tj-i2)] <- N-i2
+            L[as.character(N-i2)][[1]] <- append(L[as.character(N-i2)][[1]],(tj-i2) %% N)
+          }
         }
-        L[as.character(N-i2)] <- list((T2-i2) %% N)
       }
       pL <- list(p=p, L=L)
     }
-    pL
   }
+  pL
 }
+
 
 classifyNodes <- function(L){
   N <- length(L); k <- length(L['0'][[1]])
